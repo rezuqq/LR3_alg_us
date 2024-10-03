@@ -5,21 +5,20 @@
 #include <string.h>
 
 struct node {
-    char inf[256];      // Полезная информация
-    struct node* next;  // Ссылка на следующий элемент
+    char inf[256];
+    struct node* next;
 };
 
-struct queue {
-    struct node* head;  // Указатель на начало (голову) очереди
-    struct node* last;  // Указатель на конец (хвост) очереди
+struct stack {
+    struct node* head;
+    struct node* last;
 };
 
-// Функция создания нового узла
 struct node* get_struct(void) {
     struct node* p = NULL;
     char s[256];
 
-    if ((p = (struct node*)malloc(sizeof(struct node))) == NULL) {  // Выделяем память под новый элемент списка
+    if ((p = (struct node*)malloc(sizeof(struct node))) == NULL) {
         printf("Ошибка при распределении памяти\n");
         exit(1);
     }
@@ -31,47 +30,55 @@ struct node* get_struct(void) {
         return NULL;
     }
     strcpy(p->inf, s);
-    p->next = NULL;  // Следующего элемента нет
+    p->next = NULL;
     return p;
 }
 
-// Добавление элемента в конец очереди (enqueue)
-void enqueue(struct queue* q) {
+// Добавление элемента в стек
+void push(struct stack* st) {
     struct node* p = get_struct();
-    if (p == NULL) return;  // Если элемент не был создан
+    if (p == NULL) return;
 
-    if (q->head == NULL) {  // Если очередь пустая
-        q->head = p;
-        q->last = p;
-    }
-    else {  // Если очередь уже существует
-        q->last->next = p;
-        q->last = p;
-    }
+    p->next = st->head;
+    st->head = p;
 }
 
-// Удаление элемента из начала очереди (dequeue)
-void dequeue(struct queue* q) {
-    if (q->head == NULL) {  // Если очередь пуста
-        printf("Очередь пуста\n");
-        return;4
+// Удаление элемента из стека
+void pop(struct stack* st) {
+    if (st->head == NULL) {
+        printf("Стек пуст\n");
+        return;
     }
 
-    struct node* temp = q->head;
+    struct node* temp = st->head;
+    struct node* prev = NULL;
+
+
+    if (temp->next == NULL) {
+        printf("Удаление: %s\n", temp->inf);
+        free(temp);
+        st->head = NULL;
+        st->last = NULL;
+        return;
+    }
+
+ 
+    while (temp->next != NULL) {
+        prev = temp;
+        temp = temp->next;
+    }
+
     printf("Удаление: %s\n", temp->inf);
-    q->head = q->head->next;
     free(temp);
-
-    if (q->head == NULL) {  // Если очередь стала пустой
-        q->last = NULL;
-    }
+    prev->next = NULL;
+    st->last = prev; ;
 }
 
 // Просмотр содержимого очереди
-void review(struct queue* q) {
-    struct node* struc = q->head;
-    if (q->head == NULL) {
-        printf("Очередь пуста\n");
+void review(struct stack* st) {
+    struct node* struc = st->head;
+    if (st->head == NULL) {
+        printf("Стек пуст\n");
         return;
     }
     while (struc != NULL) {
@@ -81,9 +88,9 @@ void review(struct queue* q) {
 }
 
 // Поиск элемента по содержимому
-struct node* find(struct queue* q, char* name) {
-    struct node* struc = q->head;
-    if (q->head == NULL) {
+struct node* find(struct stack* st, char* name) {
+    struct node* struc = st->head;
+    if (st->head == NULL) {
         printf("Очередь пуста\n");
         return NULL;
     }
@@ -98,11 +105,11 @@ struct node* find(struct queue* q, char* name) {
 }
 
 // Удаление элемента по содержимому
-void delete_by_name(struct queue* q, char* name) {
-    struct node* struc = q->head;
+void delete_by_name(struct stack* st, char* name) {
+    struct node* struc = st->head;
     struct node* prev = NULL;
 
-    if (q->head == NULL) {
+    if (st->head == NULL) {
         printf("Очередь пуста\n");
         return;
     }
@@ -110,14 +117,11 @@ void delete_by_name(struct queue* q, char* name) {
     while (struc != NULL) {
         if (strcmp(name, struc->inf) == 0) {
             printf("Удаление элемента: %s\n", struc->inf);
-            if (prev == NULL) {  // Если элемент первый
-                q->head = struc->next;
+            if (prev == NULL) { 
+                st->head = struc->next;
             }
             else {
                 prev->next = struc->next;
-            }
-            if (struc == q->last) {  // Если элемент последний
-                q->last = prev;
             }
             free(struc);
             return;
@@ -129,13 +133,13 @@ void delete_by_name(struct queue* q, char* name) {
     printf("Элемент не найден\n");
 }
 
-// Основная функция
+
 int main() {
     setlocale(LC_ALL, "Rus");
     int choice;
     char name[256];
 
-    struct queue q = { NULL, NULL };  // Инициализация пустой очереди
+    struct stack st = { NULL };
 
     while (1) {
         printf("\nМеню:\n");
@@ -143,31 +147,31 @@ int main() {
         printf("2. Просмотр очереди\n");
         printf("3. Поиск элемента по имени\n");
         printf("4. Удалить элемент по имени\n");
-        printf("5. Удалить элемент из начала очереди (dequeue)\n");
+        printf("5. Удалить элемент из стека\n");
         printf("6. Выйти\n");
         printf("Выберите действие: ");
         scanf("%d", &choice);
 
         switch (choice) {
         case 1:
-            enqueue(&q);  // Добавление элемента
+            push(&st);
             break;
         case 2:
-            review(&q);  // Просмотр очереди
+            review(&st);
             break;
         case 3:
             printf("Введите имя для поиска: ");
             scanf("%s", name);
-            if (find(&q, name) != NULL)
+            if (find(&st, name) != NULL)
                 printf("Элемент найден: %s\n", name);
             break;
         case 4:
             printf("Введите имя для удаления: ");
             scanf("%s", name);
-            delete_by_name(&q, name);  // Удаление элемента по имени
+            delete_by_name(&st, name);
             break;
         case 5:
-            dequeue(&q);  // Удаление элемента из начала очереди
+            pop(&st);
             break;
         case 6:
             printf("Выход\n");
