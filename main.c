@@ -51,27 +51,15 @@ void pop(struct stack* st) {
     }
 
     struct node* temp = st->head;
-    struct node* prev = NULL;
+    printf("Удалён: %s\n", temp->inf);
 
+    st->head = st->head->next;
 
-    if (temp->next == NULL) {
-        printf("Удаление: %s\n", temp->inf);
-        free(temp);
-        st->head = NULL;
-        st->last = NULL;
-        return;
-    }
-
- 
-    while (temp->next != NULL) {
-        prev = temp;
-        temp = temp->next;
-    }
-
-    printf("Удаление: %s\n", temp->inf);
     free(temp);
-    prev->next = NULL;
-    st->last = prev; ;
+
+    if (st->head == NULL) {
+        st->last = NULL;
+    }
 }
 
 // Просмотр содержимого очереди
